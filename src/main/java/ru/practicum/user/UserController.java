@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -13,7 +15,7 @@ public class UserController {
     private final UserServiceImpl userServiceImpl;
 
     @GetMapping("/{userId}")
-    public User get(@PathVariable @Valid Long userId) throws BadRequestException {
+    public Optional<User> get(@PathVariable @Valid Long userId) throws BadRequestException {
         return userServiceImpl.getUser(userId);
     }
 
@@ -24,12 +26,12 @@ public class UserController {
 
     @PatchMapping("/{userId}")
     public User update(@PathVariable @Valid Long userId,
-                       @RequestBody UserDto userDto) throws BadRequestException {
+                       @RequestBody UserDto userDto) {
         return userServiceImpl.updateUser(userId,userDto);
     }
 
     @DeleteMapping("/{userId}")
-    public void remove(@Valid Long userId) throws BadRequestException {
+    public void remove(@PathVariable @Valid Long userId) {
         userServiceImpl.removeUser(userId);
     }
 }
