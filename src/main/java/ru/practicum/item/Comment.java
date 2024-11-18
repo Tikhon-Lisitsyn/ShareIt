@@ -1,5 +1,6 @@
 package ru.practicum.item;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import ru.practicum.item.Item;
@@ -14,14 +15,17 @@ public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String text;
 
     @ManyToOne
-    @JoinColumn(name = "item_id")
+    @JoinColumn(name = "item_id", nullable = false)
+    @JsonBackReference
     private Item item;
 
-    @JoinColumn(name = "author_id")
     @ManyToOne
+    @JoinColumn(name = "author_id", nullable = false)
     private User author;
+
     private LocalDateTime created;
 }

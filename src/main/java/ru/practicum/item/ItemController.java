@@ -20,8 +20,9 @@ public class ItemController {
     private final UserRepository userRepository;
 
     @GetMapping("/{itemId}")
-    public Optional<Item> get(@PathVariable Long itemId) throws BadRequestException {
-        return itemService.getOne(itemId);
+    public Optional<ItemDto> get(@PathVariable Long itemId,
+                              @RequestHeader("X-Sharer-User-Id") Long userId) {
+        return itemService.getOne(itemId,userId);
     }
 
     @PostMapping
@@ -54,9 +55,10 @@ public class ItemController {
     }
 
     @PostMapping("/{itemId}/comment")
-    public Comment comment(@PathVariable @Valid Long itemId,
-                           @RequestHeader("X-Sharer-User-Id") @Valid Long userId,
-                           @RequestBody String text) {
-        return itemService.comment(itemId,userId,text);
+    public CommentDto comment(@PathVariable @Valid Long itemId,
+                              @RequestHeader("X-Sharer-User-Id") @Valid Long userId,
+                              @RequestBody CommentRequestDto commentRequest) {
+        return itemService.comment(itemId, userId, commentRequest.getText());
     }
+
 }

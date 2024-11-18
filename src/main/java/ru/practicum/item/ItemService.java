@@ -11,7 +11,7 @@ public interface ItemService {
 
     Item addNew(Long userId, ItemDto itemDto);
     Item update(Long userId, ItemDto itemDto) throws BadRequestException;
-    Optional<Item> getOne(Long itemId) throws BadRequestException;
+    Optional<ItemDto> getOne(Long itemId, Long userId) throws BadRequestException;
     List<Item> getAll(Long userId) throws BadRequestException;
     List<Item> search(String text) throws BadRequestException;
 }

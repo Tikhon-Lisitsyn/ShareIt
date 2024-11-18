@@ -8,12 +8,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import ru.practicum.booking.Booking;
+import ru.practicum.booking.BookingDto;
+import ru.practicum.booking.BookingRepository;
+import ru.practicum.booking.BookingStatus;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -22,6 +28,8 @@ public class ItemServiceImpl implements ItemService {
     private final ModelMapper modelMapper;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
+    private final BookingRepository bookingRepository;
 
     @Override
     public Item addNew(Long userId, ItemDto itemDto) {
@@ -35,7 +43,6 @@ public class ItemServiceImpl implements ItemService {
         if (item.getName().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Name cannot be null");
         }
-
 
         item.setOwner(user);
         return itemRepository.save(item);
@@ -65,8 +72,15 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Optional<Item> getOne(Long itemId) {
-        return itemRepository.findById(itemId);
+    public Optional<ItemDto> getOne(Long itemId, Long userId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item with ID " + itemId + " not found"));
+
+        ItemDto itemDto = toItemDto(item);
+
+        addBookingsToItem(itemDto, itemId, userId);
+
+        return Optional.of(itemDto);
     }
 
     @Override
@@ -78,23 +92,80 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<Item> search(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
         return itemRepository.searchItemByText(text);
     }
 
-    public Comment comment(Long itemId,Long userId, String text) {
+    public CommentDto comment(Long itemId, Long userId, String text) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Item not found"));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        boolean hasBooking = bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndDateBefore(
+                itemId, userId, BookingStatus.APPROVED, LocalDateTime.now());
+        if (!hasBooking) {
+            throw new IllegalArgumentException("User has not booked this item or booking not completed");
+        }
+
         Comment comment = new Comment();
         comment.setItem(item);
         comment.setText(text);
         comment.setAuthor(user);
         comment.setCreated(LocalDateTime.now());
-        return comment;
+        commentRepository.save(comment);
+
+        return toCommentDto(comment);
+    }
+
+    public CommentDto toCommentDto(Comment comment) {
+        return new CommentDto(
+                comment.getId(),
+                comment.getText(),
+                comment.getAuthor().getName(),
+                comment.getCreated()
+        );
     }
 
     private Item toItem(ItemDto itemDto) {
         return modelMapper.map(itemDto,Item.class);
     }
+    private void addBookingsToItem(ItemDto itemDto, Long itemId, Long userId) {
+
+        Booking lastBooking = bookingRepository.findFirstByItemIdAndEndBeforeAndStatusOrderByEndDesc(
+                itemId, LocalDateTime.now(), BookingStatus.APPROVED);
+
+        Booking nextBooking = bookingRepository.findFirstByItemIdAndStartAfterAndStatusOrderByStartAsc(
+                itemId, LocalDateTime.now(), BookingStatus.APPROVED);
+
+        if (lastBooking != null && Objects.equals(lastBooking.getItem().getOwner().getId(), userId)) {
+            itemDto.setLastBooking(toBookingDto(lastBooking));
+        }
+
+        if (nextBooking != null && Objects.equals(nextBooking.getItem().getOwner().getId(), userId)) {
+            itemDto.setNextBooking(toBookingDto(nextBooking));
+        }
+    }
+
+    private BookingDto toBookingDto(Booking booking) {
+        BookingDto bookingDto = new BookingDto();
+        bookingDto.setItemId(booking.getItem().getId());
+        bookingDto.setStart(booking.getStart());
+        bookingDto.setEnd(booking.getEnd());
+        return bookingDto;
+    }
+
+    private ItemDto toItemDto(Item item) {
+        ItemDto itemDto = new ItemDto();
+        itemDto.setId(item.getId());
+        itemDto.setName(item.getName());
+        itemDto.setDescription(item.getDescription());
+        itemDto.setOwner(item.getOwner());
+        itemDto.setComments(item.getComments());
+        itemDto.setAvailable(item.getAvailable());
+        return itemDto;
+    }
+
 }
