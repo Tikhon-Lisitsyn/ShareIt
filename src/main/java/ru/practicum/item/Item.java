@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
-import ru.practicum.booking.Booking;
 import ru.practicum.user.User;
 
 import java.util.List;

@@ -2,7 +2,6 @@ package ru.practicum.booking;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,11 +24,11 @@ public class BookingService {
     @Transactional
     public Booking createBooking(Long userId, Long itemId, LocalDateTime start, LocalDateTime end) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item not found"));
         if (!item.getAvailable()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Item is not available");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item is not available");
         }
 
         Booking booking = new Booking();
@@ -59,8 +58,7 @@ public class BookingService {
 
         if (approved) {
             booking.setStatus(BookingStatus.APPROVED);
-        }
-        else {
+        } else {
             booking.setStatus(BookingStatus.REJECTED);
         }
 
@@ -88,6 +86,6 @@ public class BookingService {
 
 
     public List<Booking> getBookingsByOwner(Long userId, String state) {
-        return bookingRepository.getBookingsByOwner(userId,state);
+        return bookingRepository.getBookingsByOwner(userId, state);
     }
 }

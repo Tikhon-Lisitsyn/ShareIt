@@ -27,13 +27,13 @@ public class BookingController {
     public Booking respondToBooking(@RequestHeader("X-Sharer-User-Id") @Valid Long userId,
                                     @PathVariable Long bookingId,
                                     @RequestParam Boolean approved) {
-        return bookingService.respondToBooking(userId,bookingId,approved);
+        return bookingService.respondToBooking(userId, bookingId, approved);
     }
 
     @GetMapping("/{bookingId}")
     public Booking getBookingInfo(@RequestHeader("X-Sharer-User-Id") @Valid Long userId,
                                   @PathVariable Long bookingId) {
-        return bookingService.getBookingInfo(userId,bookingId);
+        return bookingService.getBookingInfo(userId, bookingId);
     }
 
     @GetMapping
@@ -44,6 +44,6 @@ public class BookingController {
     @GetMapping("/owner")
     public List<Booking> getBookingsByOwner(@RequestHeader("X-Sharer-User-Id") @Valid Long userId,
                                             @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.getBookingsByOwner(userId,state);
+        return bookingService.getBookingsByOwner(userId, state);
     }
 }

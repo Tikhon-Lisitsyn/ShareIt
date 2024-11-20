@@ -3,7 +3,6 @@ package ru.practicum.item;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.User;
@@ -21,8 +20,8 @@ public class ItemController {
 
     @GetMapping("/{itemId}")
     public Optional<ItemDto> get(@PathVariable Long itemId,
-                              @RequestHeader("X-Sharer-User-Id") Long userId) {
-        return itemService.getOne(itemId,userId);
+                                 @RequestHeader("X-Sharer-User-Id") Long userId) {
+        return itemService.getOne(itemId, userId);
     }
 
     @PostMapping
@@ -32,7 +31,7 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public Item update(@RequestHeader("X-Sharer-User-Id") @Valid  Long userId,
+    public Item update(@RequestHeader("X-Sharer-User-Id") @Valid Long userId,
                        @PathVariable Long itemId,
                        @RequestBody ItemDto itemDto) {
         itemDto.setId(itemId);
@@ -40,7 +39,7 @@ public class ItemController {
                 .orElseThrow(() -> new NotFoundException("User not found"));
         itemDto.setOwner(user);
 
-        return itemService.update(userId,itemDto);
+        return itemService.update(userId, itemDto);
     }
 
     @GetMapping

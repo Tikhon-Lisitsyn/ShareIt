@@ -3,7 +3,6 @@ package ru.practicum.item;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
-import ru.practicum.item.Item;
 import ru.practicum.user.User;
 
 import java.time.LocalDateTime;

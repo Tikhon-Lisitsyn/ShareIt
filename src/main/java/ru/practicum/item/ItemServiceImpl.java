@@ -2,7 +2,6 @@ package ru.practicum.item;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -37,11 +36,11 @@ public class ItemServiceImpl implements ItemService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         if (item.getAvailable() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Available cannot be null");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Available cannot be null");
         }
 
         if (item.getName().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Name cannot be null");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name cannot be null");
         }
 
         item.setOwner(user);
@@ -130,8 +129,9 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Item toItem(ItemDto itemDto) {
-        return modelMapper.map(itemDto,Item.class);
+        return modelMapper.map(itemDto, Item.class);
     }
+
     private void addBookingsToItem(ItemDto itemDto, Long itemId, Long userId) {
 
         Booking lastBooking = bookingRepository.findFirstByItemIdAndEndBeforeAndStatusOrderByEndDesc(

@@ -2,13 +2,12 @@ package ru.practicum.request;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import ru.practicum.user.User;
 
 import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "requests" )
+@Table(name = "requests")
 public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
