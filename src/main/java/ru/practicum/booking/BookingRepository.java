@@ -11,14 +11,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT b FROM Booking b WHERE b.booker.id = :userId ORDER BY b.start DESC")
     List<Booking> findBookingsByUserId(@Param("userId") Long userId);
 
-
-    @Query("SELECT b FROM Booking b " +
-            "JOIN b.item i " +
-            "WHERE i.owner = :userId AND " +
-            "(:state = 'ALL' OR b.status = :state) " +
-            "ORDER BY b.start DESC")
-    List<Booking> getBookingsByOwner(@Param("userId") Long userId, @Param("state") String state);
-
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END " +
             "FROM Booking b WHERE b.item.id = :itemId AND b.booker.id = :userId " +
             "AND b.status = :status AND b.end < :currentDate")
@@ -35,5 +27,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Booking findFirstByItemIdAndStartAfterAndStatusOrderByStartAsc(
             Long itemId, LocalDateTime currentDate, BookingStatus status);
 
+    @Query("SELECT b FROM Booking b JOIN b.item i WHERE i.owner = :userId AND b.status = :status ORDER BY b.start DESC")
+    List<Booking> findBookingsByOwnerAndStatus(@Param("userId") Long userId, @Param("status") BookingStatus status);
+
+    @Query("SELECT b FROM Booking b JOIN b.item i WHERE i.owner = :userId ORDER BY b.start DESC")
+    List<Booking> findBookingsByOwner(@Param("userId") Long userId);
 
 }

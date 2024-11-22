@@ -1,6 +1,5 @@
 package ru.practicum.item;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -11,7 +10,9 @@ import ru.practicum.booking.Booking;
 import ru.practicum.booking.BookingDto;
 import ru.practicum.booking.BookingRepository;
 import ru.practicum.booking.BookingStatus;
+import ru.practicum.exception.InvalidBookingException;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.exception.ValidationException;
 import ru.practicum.user.User;
 import ru.practicum.user.UserRepository;
 
@@ -31,27 +32,32 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
 
     @Override
-    public Item addNew(Long userId, ItemDto itemDto) {
+    public ItemDto addNew(Long userId, ItemDto itemDto) {
         Item item = toItem(itemDto);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         if (item.getAvailable() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Available cannot be null");
+            throw new ValidationException("Available cannot be null");
         }
 
         if (item.getName().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name cannot be null");
+            throw new ValidationException("Name cannot be null");
         }
 
         item.setOwner(user);
-        return itemRepository.save(item);
+        itemRepository.save(item);
+        return toItemDto(item);
     }
 
     @Override
     @Transactional
-    public Item update(Long userId, ItemDto itemDto) {
+    public ItemDto update(Long userId, Long itemId, ItemDto itemDto) {
+        itemDto.setId(itemId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        itemDto.setOwner(user);
         Item existingItem = itemRepository.findById(itemDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Item not found with id: " + itemDto.getId()));
+                .orElseThrow(() -> new NotFoundException("Item not found with id: " + itemDto.getId()));
 
         if (!existingItem.getOwner().getId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not the owner of this item");
@@ -66,8 +72,8 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() != null) {
             existingItem.setAvailable(itemDto.getAvailable());
         }
-
-        return itemRepository.save(existingItem);
+        itemRepository.save(existingItem);
+        return toItemDto(existingItem);
     }
 
     @Override
@@ -85,7 +91,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<Item> getAll(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         return itemRepository.findAllByOwner(user);
     }
 
@@ -99,14 +105,14 @@ public class ItemServiceImpl implements ItemService {
 
     public CommentDto comment(Long itemId, Long userId, String text) {
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+                .orElseThrow(() -> new NotFoundException("Item not found"));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         boolean hasBooking = bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndDateBefore(
                 itemId, userId, BookingStatus.APPROVED, LocalDateTime.now());
         if (!hasBooking) {
-            throw new IllegalArgumentException("User has not booked this item or booking not completed");
+            throw new InvalidBookingException("User has not booked this item or booking not completed");
         }
 
         Comment comment = new Comment();

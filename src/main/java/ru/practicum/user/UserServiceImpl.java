@@ -1,16 +1,14 @@
 package ru.practicum.user;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.modelmapper.ModelMapper;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+
+import ru.practicum.exception.EmailAlreadyExistsException;
+import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
 
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,27 +16,32 @@ class UserServiceImpl implements UserService {
     private final UserRepository repository;
     private final ModelMapper modelMapper;
 
-    public Optional<User> getUser(Long userId) throws BadRequestException {
-        return repository.findById(userId);
+    public UserDto getUser(Long userId) {
+        User user = repository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        return toUserDto(user);
     }
 
-    public User addUser(UserDto userDto) {
+    public UserDto addUser(UserDto userDto) {
         User user = toUser(userDto);
         if (user.getEmail() == null || user.getName() == null) {
             throw new ValidationException("Почта или имя пользователя не может быть null");
         }
 
         if (repository.existsByEmail(userDto.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists");
+            throw new EmailAlreadyExistsException("User with this email already exists");
         }
 
-        return repository.save(user);
+        repository.save(user);
+
+        return toUserDto(user);
     }
 
     @Transactional
-    public User updateUser(Long userId, UserDto userDto) {
+    public UserDto updateUser(Long userId, UserDto userDto) {
         User existingUser = repository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
         if (userDto.getName() != null) {
             existingUser.setName(userDto.getName());
@@ -47,12 +50,12 @@ class UserServiceImpl implements UserService {
         if (userDto.getEmail() != null) {
             if (!existingUser.getEmail().equals(userDto.getEmail()) &&
                     repository.existsByEmail(userDto.getEmail())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "User with this email already exists");
+                throw new EmailAlreadyExistsException("User with this email already exists");
             }
             existingUser.setEmail(userDto.getEmail());
         }
-
-        return repository.save(existingUser);
+        repository.save(existingUser);
+        return toUserDto(existingUser);
     }
 
     public void removeUser(Long userId) {
@@ -61,5 +64,13 @@ class UserServiceImpl implements UserService {
 
     private User toUser(UserDto userDto) {
         return modelMapper.map(userDto, User.class);
+    }
+
+    private UserDto toUserDto(User user) {
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setName(user.getName());
+        userDto.setEmail(user.getEmail());
+        return userDto;
     }
 }

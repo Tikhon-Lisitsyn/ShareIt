@@ -9,9 +9,9 @@ import java.util.Optional;
 @Service
 public interface ItemService {
 
-    Item addNew(Long userId, ItemDto itemDto);
+    ItemDto addNew(Long userId, ItemDto itemDto);
 
-    Item update(Long userId, ItemDto itemDto) throws BadRequestException;
+    ItemDto update(Long userId, Long itemId, ItemDto itemDto) throws BadRequestException;
 
     Optional<ItemDto> getOne(Long itemId, Long userId) throws BadRequestException;
 

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import ru.practicum.user.User;
 
@@ -14,7 +13,6 @@ import java.util.List;
 @Entity
 @Table(name = "items")
 public class Item {
-    @Positive(message = "ID вещи не может быть отрицательным")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
