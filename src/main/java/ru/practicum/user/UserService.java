@@ -3,12 +3,14 @@ package ru.practicum.user;
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 interface UserService {
-    User getUser(Long userId) throws BadRequestException;
-    User addUser(UserDto userDto);
-    User updateUser(Long userId, UserDto userDto) throws BadRequestException;
+    UserDto getUser(Long userId) throws BadRequestException;
+
+    UserDto addUser(UserDto userDto);
+
+    UserDto updateUser(Long userId, UserDto userDto) throws BadRequestException;
+
     void removeUser(Long userId) throws BadRequestException;
 }

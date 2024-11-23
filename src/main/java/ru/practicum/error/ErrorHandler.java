@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.exception.EmailAlreadyExistsException;
+import ru.practicum.exception.InvalidBookingException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
 
@@ -40,6 +41,13 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler
     public ErrorResponse handleSameEmailException(final EmailAlreadyExistsException e) {
+        log.error("Ошибка: {}", e.getMessage(), e);
+        return new ErrorResponse("Ошибка с входным параметром", e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler
+    public ErrorResponse handleInvalidBookingException(final InvalidBookingException e) {
         log.error("Ошибка: {}", e.getMessage(), e);
         return new ErrorResponse("Ошибка с входным параметром", e.getMessage());
     }
