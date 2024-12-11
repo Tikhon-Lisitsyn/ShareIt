@@ -41,3 +41,4 @@ build/
 *.class
 *.jar
 *.DS_Store
+.idea/
